@@ -240,8 +240,12 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 int
 TemperGetOtherStuff(Temper *t, char *buf, int length)
 {
+  int i;
 	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 2, 0);
 	TemperSendCommand(t, 0x52, 0, 0, 0, 0, 0, 0, 0);
+	for(i = 0; i < 7; i++) {
+		TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
+	}
 	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 1, 0);
 	return TemperGetData(t, buf, length);
 }
