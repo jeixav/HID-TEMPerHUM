@@ -171,9 +171,6 @@ TemperSendCommand(Temper *t, int a, int b, int c, int d, int e, int f, int g, in
 
 	ret = usb_control_msg(t->handle, 0x21, 9, 0x200, 0x01,
 			    (char *) buf, 32, t->timeout);
-	if(t->debug) {
-		printf("Returned bytes: %d\n",ret);
-	}
 	if(ret != 32) {
 		perror("usb_control_msg failed");
 		return -1;
@@ -204,9 +201,6 @@ TemperSendCommand2(Temper *t, int a, int b, int c, int d, int e, int f, int g, i
 
 	ret = usb_control_msg(t->handle, 0xa1, 1, 0x300, 0x01,
 			    (char *) buf, 256, t->timeout);
-	if(t->debug) {
-		printf("Returned bytes: %d\n",ret);
-	}
 	if(ret != 8) {
 		perror("usb_control_msg failed");
 		return -1;
@@ -252,12 +246,12 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 	char buf[256];
 	int ret, temperature, rh, i;
 
-	TemperSendCommand2(t, 10, 11, 12, 13, 0, 0, 2, 0);
+	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 2, 0);
 	TemperSendCommand(t, 0x48, 0, 0, 0, 0, 0, 0, 0);
 	for(i = 0; i < 7; i++) {
 		TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
-	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 1, 0);
+	TemperSendCommand2(t, 10, 11, 12, 13, 0, 0, 1, 0);
 	ret = TemperGetData(t, buf, 256);
 	if(ret < 2) {
 		return -1;
