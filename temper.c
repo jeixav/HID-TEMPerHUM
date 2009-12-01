@@ -188,29 +188,6 @@ TemperGetData(Temper *t, char *buf, int len)
 }
 
 int
-TemperGetTemperatureInC(Temper *t, float *tempC)
-{
-	char buf[256];
-	int ret, temperature, i;
-
-	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 2, 0);
-	TemperSendCommand(t, 0x54, 0, 0, 0, 0, 0, 0, 0);
-	for(i = 0; i < 7; i++) {
-		TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	}
-	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 1, 0);
-	ret = TemperGetData(t, buf, 256);
-	if(ret < 2) {
-		return -1;
-	}
-
-	temperature = (buf[1] & 0xFF) + (buf[0] << 8);	
-	temperature += 1152;			// calibration value
-	*tempC = temperature * (125.0 / 32000.0);
-	return 0;
-}
-
-int
 TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 {
 	char buf[256];
@@ -225,6 +202,17 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 	ret = TemperGetData(t, buf, 256);
 	if(ret < 2) {
 		return -1;
+	}
+
+	if(t->debug) {
+	  printf("TempAndRelHum (%d bytes):\n", ret);
+	  for(i = 0; i < ret; i++) {
+	    printf(" %02x", buf[i]);
+	    if(i % 16 == 15) {
+	      printf("\n");
+	    }
+	  }
+	  printf("\n");
 	}
 
 	temperature = (buf[1] & 0xFF) + (buf[0] << 8);	
@@ -272,38 +260,22 @@ main(void)
 		exit(-1);
 	}
 
-/*
-	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 2, 0);
-	TemperSendCommand(t, 0x43, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-	TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
-*/
-
 	bzero(buf, 256);
 	ret = TemperGetOtherStuff(t, buf, 256);
 	printf("Other Stuff (%d bytes):\n", ret);
 	for(i = 0; i < ret; i++) {
-		printf(" %02x", buf[i] & 0xFF);
+		printf(" %02x", buf[i]);
 		if(i % 16 == 15) {
 			printf("\n");
 		}
 	}
 	printf("\n");
+	sleep(1);
 
 	for(;;) {
 		float tempc;
 		float rh;
 
-		/* if(TemperGetTemperatureInC(t, &tempc) < 0) { */
-		/* 	perror("TemperGetTemperatureInC"); */
-		/* 	exit(1); */
-		/* } */
-		/* printf("temperature %.2fF %.2fC\n", (9.0 / 5.0 * tempc + 32.0), */
-		/*        tempc); */
 		if(TemperGetTempAndRelHum(t, &tempc, &rh) < 0) {
 			perror("TemperGetTemperatureAndRelHum");
 			exit(1);
@@ -311,7 +283,7 @@ main(void)
 		printf("temperature %.2fF %.2fC\n", (9.0 / 5.0 * tempc + 32.0),
 		       tempc);
 		printf("relative humidity %.2f\n", rh);
-		sleep(10);
+		sleep(5);
 	}
 	return 0;
 }
