@@ -216,9 +216,10 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 	  printf("\n");
 	}
 
+	/* Numerical constants below come from the Sensirion SHT1x
+	datasheet (Table 9 for temperature and Table 6 for humidity */
 	temperature = (buf[1] & 0xFF) + (buf[0] << 8);	
-	temperature += 1152;			// calibration value
-	*tempC = temperature * (125.0 / 32000.0);
+	*tempC = -39.7 + .01*temperature;
 
 	rh = (buf[3] & 0xFF) + ((buf[2] & 0xFF) << 8);
 	*relhum = 2.0468 + 0.0367*rh - 1.5955e-6*rh*rh;
@@ -255,7 +256,7 @@ main(void)
 	usb_find_busses();
 	usb_find_devices();
 
-	t = TemperCreateFromDeviceNumber(0, USB_TIMEOUT, 1);
+	t = TemperCreateFromDeviceNumber(0, USB_TIMEOUT, 0);
 	if(!t) {
 		perror("TemperCreate");
 		exit(-1);
@@ -271,23 +272,20 @@ main(void)
 	      printf("\n");
 	    }
 	  }
+	  printf("\n");
 	}
-	printf("\n");
-	sleep(1);
 
-	for(;;) {
-		float tempc;
-		float rh;
+	float tempc;
+	float rh;
 
-		if(TemperGetTempAndRelHum(t, &tempc, &rh) < 0) {
-			perror("TemperGetTemperatureAndRelHum");
-			exit(1);
-		}
-		printf("temperature %.2fF %.2fC\n", (9.0 / 5.0 * tempc + 32.0),
-		       tempc);
-		printf("relative humidity %.2f\n", rh);
-		sleep(5);
+	if(TemperGetTempAndRelHum(t, &tempc, &rh) < 0) {
+	  perror("TemperGetTemperatureAndRelHum");
+	  exit(1);
 	}
+	printf("Temperature: %.2f°F, %.2f°C\n", (9.0 / 5.0 * tempc + 32.0),
+	       tempc);
+	printf("Relative humidity: %.2f%%\n", rh);
+
 	return 0;
 }
 
