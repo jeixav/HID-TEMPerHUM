@@ -199,6 +199,7 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 		TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 1, 0);
+	sleep(1);
 	ret = TemperGetData(t, buf, 256);
 	if(ret < 2) {
 		return -1;
@@ -262,12 +263,14 @@ main(void)
 
 	bzero(buf, 256);
 	ret = TemperGetOtherStuff(t, buf, 256);
-	printf("Other Stuff (%d bytes):\n", ret);
-	for(i = 0; i < ret; i++) {
-		printf(" %02x", buf[i]);
-		if(i % 16 == 15) {
-			printf("\n");
-		}
+	if(t->debug) {
+	  printf("Other Stuff (%d bytes):\n", ret);
+	  for(i = 0; i < ret; i++) {
+	    printf(" %02x", buf[i]);
+	    if(i % 16 == 15) {
+	      printf("\n");
+	    }
+	  }
 	}
 	printf("\n");
 	sleep(1);
