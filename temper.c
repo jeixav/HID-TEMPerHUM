@@ -199,7 +199,8 @@ TemperGetTempAndRelHum(Temper *t, float *tempC, float *relhum)
 		TemperSendCommand(t, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 	TemperSendCommand(t, 10, 11, 12, 13, 0, 0, 1, 0);
-	sleep(1);
+	/* According to Sensirion datasheet for SHT1x the time for 8/12/14 bit measurements is 20/80/320 ms. Trial and error suggests that 400ms is a safe least upper bound */
+	usleep(400000);
 	ret = TemperGetData(t, buf, 256);
 	if(ret < 2) {
 		return -1;
@@ -282,9 +283,8 @@ main(void)
 	  perror("TemperGetTemperatureAndRelHum");
 	  exit(1);
 	}
-	printf("Temperature: %.2f°F, %.2f°C\n", (9.0 / 5.0 * tempc + 32.0),
-	       tempc);
-	printf("Relative humidity: %.2f%%\n", rh);
+	/* printf("Temperature: %.2f°F, %.2f°C\tRelative humidity: %.2f%%\n", (9.0 / 5.0 * tempc + 32.0), tempc, rh); */
+	printf("%.2f %.2f\n", tempc, rh);
 
 	return 0;
 }
